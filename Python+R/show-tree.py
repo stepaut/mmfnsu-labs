@@ -4,7 +4,7 @@ import argparse
 
 _space = '    '
 _vert = '|   '
-_offshoot = '|-- '
+_middle = '|-- '
 _last = '`-- '
 
 def main():
@@ -12,7 +12,7 @@ def main():
     parser.add_argument('filename')
     parser.add_argument('-l', action='store_true')
     parser.add_argument('-s', action='store_true')
-    parser.add_argument('-hs', action='store_true')
+    parser.add_argument('-c', action='store_true')
     args = parser.parse_args()
     path = Path(args.filename)
 
@@ -20,8 +20,8 @@ def main():
         print("The path must point to a directory!")
         return
 
-    print(make_text(path, do_label = args.l, do_size=args.s, human_size=args.hs))
-    for line in tree(path, do_label = args.l, do_size=args.s, human_size=args.hs):
+    print(make_text(path, do_label = args.l, do_size=args.s, human_size=args.c))
+    for line in tree(path, do_label = args.l, do_size=args.s, human_size=args.c):
         print(line)
 
 def get_human_size(size):
@@ -72,22 +72,22 @@ def make_text(path: Path,
         text += f" {round(size,2)} {units}"
     return text
 
-def tree(dir_path: Path, 
+def tree(parent: Path, 
          prefix: str='', 
          do_label: bool=False, 
          do_size: bool=False, 
          human_size: bool=False):
-    contents = list(dir_path.iterdir())
+    
+    contents = list(parent.iterdir())
+    begins = [_middle] * (len(contents) - 1) + [_last]
 
-    pointers = [_offshoot] * (len(contents) - 1) + [_last]
-
-    for pointer, path in zip(pointers, contents):
+    for begin, path in zip(begins, contents):
         text = make_text(path, do_label, do_size, human_size)
             
-        yield prefix + pointer + text
+        yield prefix + begin + text
 
         if path.is_dir():
-            if pointer == _offshoot:
+            if begin == _middle:
                 extension = _vert
             else:
                 extension = _space 
