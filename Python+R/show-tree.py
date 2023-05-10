@@ -20,7 +20,7 @@ def main():
         print("The path must point to a directory!")
         return
 
-    print(path)
+    print(make_text(path, do_label = args.l, do_size=args.s, human_size=args.hs))
     for line in tree(path, do_label = args.l, do_size=args.s, human_size=args.hs):
         print(line)
 
@@ -46,6 +46,32 @@ def get_size(start_path):
 
     return total_size
 
+def make_text(path: Path,
+         do_label, 
+         do_size, 
+         human_size):
+    text = path.name
+    is_dir = path.is_dir()
+
+    if do_label:
+        if is_dir:
+            text += " (d)"
+        else:
+            text += " (f)"
+
+    if do_size:
+        if is_dir:
+            size = get_size(str(path))
+        else:
+            size = os.stat(str(path)).st_size
+
+        units = "Bytes"
+        if human_size:
+            size, units = get_human_size(size)
+
+        text += f" {round(size,2)} {units}"
+    return text
+
 def tree(dir_path: Path, 
          prefix: str='', 
          do_label: bool=False, 
@@ -56,29 +82,11 @@ def tree(dir_path: Path,
     pointers = [_offshoot] * (len(contents) - 1) + [_last]
 
     for pointer, path in zip(pointers, contents):
-        text = path.name
-        is_dir = path.is_dir()
-
-        if do_label:
-            if is_dir:
-                text += " (d)"
-            else:
-                text += " (f)"
-
-        if do_size:
-            if is_dir:
-                size = get_size(str(path))
-            else:
-                size = os.stat(str(path)).st_size
-
-            units = "Bytes"
-            if human_size:
-                size, units = get_human_size(size)
-
-            text += f" {round(size,2)} {units}"
+        text = make_text(path, do_label, do_size, human_size)
             
         yield prefix + pointer + text
-        if is_dir:
+
+        if path.is_dir():
             if pointer == _offshoot:
                 extension = _vert
             else:
