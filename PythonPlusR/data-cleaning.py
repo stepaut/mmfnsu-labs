@@ -3,6 +3,13 @@ import numpy as np
 import sys
 import os
 import enum
+import matplotlib.pyplot as plt
+import matplotlib
+ 
+matplotlib.rcParams['font.size'] = 10
+matplotlib.rcParams['figure.dpi'] = 100
+ 
+from IPython.core.pylabtools import figsize
 
 class EjectionType(enum.Enum):
     iqr = 0
@@ -88,6 +95,14 @@ def get_correct_min(col, max_deviation, median):
                 minv = v
     return minv
 
+def make_graphs(orig:pd.DataFrame, clear:pd.DataFrame):
+    cols = clear.columns
+
+    figsize(6, 4)
+
+    for c in cols:
+        plt.hist([orig[c], clear[c]])
+
 def main():
     dict = {'First Score':[100, 90, np.nan, 95, 1, 56],
         'Second Score': [30, np.nan, 45, 56, -11111, 56],
@@ -106,6 +121,8 @@ def main():
                       ejection_type=EjectionType.iqr,
                       iqr_coef = 1000)
     print(df1)
+
+    make_graphs(df,df1)
 
 if __name__ == '__main__':
     main()
