@@ -1,9 +1,4 @@
-
-
-drop_dup <- function(data) {
-    df2 <- data[!duplicated(data), ]
-    return(df2)
-}
+library(ggplot2)
 
 remove_ejections <- function(df, iqr_coef, ejection_type) {
     iqr_upper <- function(x, coef) {
@@ -100,10 +95,7 @@ clean_data <- function(
     print("START")
     print(data)
 
-    data_new <- drop_dup(data)
-
-    print("DD:")
-    print(data_new)
+    data_new <- data[!duplicated(data), ]
 
     data_new <- fix_skipped(data_new, nan_crit_val)
 
@@ -122,14 +114,35 @@ clean_data <- function(
 }
 
 
+draw_hists <- function(data1, data2, col) {
+    if (is.numeric(data1[, col])) {
+        # ggplot(data = data2) +
+        #     geom_histogram(mapping = aes(x = data2[, col]), bins = 4)
+
+        blue <- rgb(0, 0, 1, alpha = 0.5)
+        red <- rgb(1, 0, 0, alpha = 0.5)
+
+        width <- (max(data1[, col]) - min(data1[, col])) / 10
+        count2 <- (max(data2[, col]) - min(data2[, col])) / width
+
+        hist(data1[, col], prob = TRUE, col = blue, breaks = 9)
+        hist(data2[, col], prob = TRUE, col = red, breaks = count2 - 1, add = TRUE)
+        legend("topright",
+            legend = c("old", "new"),
+            col = c(blue, red),
+            pch = 15
+        )
+    }
+}
+
 #########################################
 
 df <- data.frame(
-    fs = c(100, 90, NaN, 95, 1, 56),
-    ss = c(30, NaN, 45, 56, -11111, 56),
-    ts = c(52, 1240, 80, 98, 1, 56),
-    ffs = c(NaN, NaN, NaN, 65, 1, 56),
-    STRS = c("52", "40", "40", "", "aaa", 56),
+    fs = c(100, 90, NaN, 95, 1, 56, 56),
+    ss = c(30, NaN, 45, 56, -11111, 56, 56),
+    ts = c(52, 1240, 80, 98, 1, 56, 56),
+    ffs = c(NaN, NaN, NaN, 65, 1, 56, 56),
+    STRS = c("52", "40", "40", "", "aaa", 56, 56),
     stringsAsFactors = FALSE
 )
 
@@ -137,8 +150,10 @@ df <- data.frame(
 directory <- getwd()
 path <- paste(directory, "\\datasets\\avocado1.csv", sep = "")
 
-# df <- read.csv(path)
+df <- read.csv(path)
 
 path_to_save <- paste(directory, "\\temp\\dc.csv", sep = "")
 
 df_new <- clean_data(df, path_to_save, 1, 0.25, 1)
+
+draw_hists(df, df_new, "AveragePrice")
