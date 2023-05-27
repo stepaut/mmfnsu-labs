@@ -1,20 +1,4 @@
-library(tidyverse)
-library(dplyr)
-library(ggplot2)
-library(ggpubr)
 
-
-plot_histogram <- function(df1, df2, feature) {
-    blue <- rgb(0, 0, 1, alpha = 0.5)
-    red <- rgb(1, 0, 0, alpha = 0.5)
-    hist(df1[, feature], prob = TRUE, col = blue, breaks = 20, xlab = feature)
-    hist(df2[, feature], prob = TRUE, col = red, breaks = 20, add = T)
-    legend("topright",
-        legend = c("old", "new"),
-        col = c(blue, red),
-        pch = 15
-    )
-}
 
 drop_dup <- function(data) {
     df2 <- data[!duplicated(data), ]
@@ -23,21 +7,23 @@ drop_dup <- function(data) {
 
 remove_ejections <- function(df, iqr_coef, ejection_type) {
     iqr_upper <- function(x, coef) {
+        median <- median(x)
         Q1 <- quantile(x, probs = .25)
         Q3 <- quantile(x, probs = .75)
         iqr <- Q3 - Q1
 
-        upper_limit <- Q3 + (iqr * coef)
+        upper_limit <- median + (iqr * coef)
 
         return(x > upper_limit)
     }
 
     iqr_lower <- function(x, coef) {
+        median <- median(x)
         Q1 <- quantile(x, probs = .25)
         Q3 <- quantile(x, probs = .75)
         iqr <- Q3 - Q1
 
-        lower_limit <- Q1 - (iqr * coef)
+        lower_limit <- median - (iqr * coef)
 
         return(x < lower_limit)
     }
@@ -73,6 +59,8 @@ remove_ejections <- function(df, iqr_coef, ejection_type) {
             }
         }
     }
+
+    return(df)
 }
 
 fix_skipped <- function(data, nan_crit_val) {
@@ -109,47 +97,48 @@ clean_data <- function(
     ejection_type = 1,
     nan_crit_val = 0.25,
     iqr_coef = 1) {
+    print("START")
+    print(data)
 
     data_new <- drop_dup(data)
 
-    data_new <- remove_ejections(data_new, iqr_coef, ejection_type)
+    print("DD:")
+    print(data_new)
 
     data_new <- fix_skipped(data_new, nan_crit_val)
+
+    print("FIX SKIPPED:")
+    print(data_new)
+
+    data_new <- remove_ejections(data_new, iqr_coef, ejection_type)
+
+    print("REMOVE EJECTIONS:")
+    print(data_new)
+    print("END")
 
     write.csv(data_new, path_to_save, row.names = FALSE)
 
     return(data_new)
 }
 
-draw_hists <- function(data1, data2) {
-    for (i in names(data2)) {
-        # print(i)
-        if (is.numeric(data1[, i])) {
-            # print(plot_histogram(data1, data2, i))
-        } else {
-            blue <- rgb(0, 0, 1, alpha = 0.5)
-            red <- rgb(1, 0, 0, alpha = 0.5)
-            barplot(prop.table(table(data1[[i]])), col = blue, space = 0)
-            barplot(prop.table(table(data2[[i]])), add = T, col = red, space = 0) # nolint
-            legend("topright",
-                legend = c("old", "new"),
-                col = c(blue, red),
-                pch = 15
-            )
-        }
-    }
-}
 
+#########################################
 
+df <- data.frame(
+    fs = c(100, 90, NaN, 95, 1, 56),
+    ss = c(30, NaN, 45, 56, -11111, 56),
+    ts = c(52, 1240, 80, 98, 1, 56),
+    ffs = c(NaN, NaN, NaN, 65, 1, 56),
+    STRS = c("52", "40", "40", "", "aaa", 56),
+    stringsAsFactors = FALSE
+)
 
 
 directory <- getwd()
 path <- paste(directory, "\\datasets\\avocado1.csv", sep = "")
 
-df <- read.csv(path)
+# df <- read.csv(path)
 
 path_to_save <- paste(directory, "\\temp\\dc.csv", sep = "")
 
-df_new <- clean_data(df, path_to_save, type = 2, Q = 0.25, coef_IQR = 1)
-
-draw_hists(df, df_new)
+df_new <- clean_data(df, path_to_save, 1, 0.25, 1)
