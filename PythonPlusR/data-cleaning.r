@@ -1,4 +1,5 @@
 library(ggplot2)
+library("DescTools")
 
 remove_ejections <- function(df, iqr_coef, ejection_type) {
     iqr_upper <- function(x, coef) {
@@ -76,8 +77,7 @@ fix_skipped <- function(data, nan_crit_val) {
             if (nan_len > len_of_col * nan_crit_val) {
                 drop <- c(drop, names(data)[i])
             } else {
-                f <- factor(data[, i])
-                data[, i][(data[, i]) == ""] <- levels(f)[2]
+                data[, i][(data[, i]) == ""] <- Mode(data[, i])
             }
         }
     }
@@ -116,9 +116,6 @@ clean_data <- function(
 
 draw_hists <- function(data1, data2, col) {
     if (is.numeric(data1[, col])) {
-        # ggplot(data = data2) +
-        #     geom_histogram(mapping = aes(x = data2[, col]), bins = 4)
-
         blue <- rgb(0, 0, 1, alpha = 0.5)
         red <- rgb(1, 0, 0, alpha = 0.5)
 
