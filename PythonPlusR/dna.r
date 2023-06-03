@@ -1,4 +1,4 @@
-
+#library(caret)
 
 ################################
 
@@ -68,7 +68,7 @@ pairs <- list()
 
 for (i in 1:20) {
     for (j in 1:20) {
-        if (i != j) {
+        if (j > i) {
             pairs <- c(pairs, list(c(i, j)))
         }
     }
@@ -116,6 +116,11 @@ pacient_pair_vals <- matrix(aaa, nrow = 30, ncol = 1520, byrow = FALSE)
 
 all_vals <- cbind(pacient_vals, pacient_pair_vals)
 logged_vals <- log(all_vals)
-dim(logged_vals)
 
 print(logged_vals)
+
+# 2
+
+# labels <- as.integer(grepl("p_cncr", pacients_cols))
+# labels <- array(labels)
+# labels <- matrix(labels, nrow = 30, ncol = 1)
